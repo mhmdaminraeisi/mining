@@ -1,8 +1,10 @@
 import random
 import numpy as np
-from typing import List
+import pandas as pd
+from typing import *
 from entities import *
 from config import *
+from utils import *
 
 def generate_random_coordinate(d: int) -> Coordinate:
     return list(np.random.uniform(MIN_POINT_RANGE, MAX_POINT_RANGE, d))
@@ -19,3 +21,36 @@ def generate_n_uncertain_points_in_Rd(n: int, d: int) -> List[UncertainPoint]:
 
 def generate_k_centers_in_Rd(k: int, d: int) -> List[Center]:
     return [generate_random_coordinate(d) for _ in range(0, k)]
+
+
+def transfer_csv_to_desired_format(path: str, key: str, num_of_intervals: List[int], name='name', lat='lat', lng='lng') -> List[UncertainPoint]:
+    df = pd.read_csv(path, usecols=[key, name, lat, lng])
+    mins = [min(df[lat]), min(df[lng])]
+    maxs = [max(df[lat]), max(df[lng])]
+
+    centers = get_centers_of_districts(mins, maxs, num_of_intervals)
+    df['district'] = df.apply(lambda x: get_index_of_nearest_center_to_coordinate([x[lat], x[lng]], centers), axis=1) 
+    df1 = df.groupby([name, 'district']).agg(count=(key, 'size'), lat=(lat, 'mean'), lng=(lng, 'mean')).reset_index()
+    df2 = df1.groupby([name]).agg(sum=('count', 'sum')).reset_index()
+    df3 = pd.merge(df1, df2, on=name, how='inner')
+    df3['district_probability'] = df3.apply(lambda x: x['count']/x['sum'], axis=1)
+    df3['location_with_probability'] = df3[['district_probability', lat, lng]].values.tolist()
+    df4 = df3.groupby(name)['location_with_probability'].agg(lambda x: list(x)).reset_index()
+
+    uncertain_points = []
+    for i in range(df4.shape[0]):
+        points = []
+        for p in df4.iloc[i][1]:
+            points.append(Point(p[1:], p[0]))
+        uncertain_points.append(points)
+        
+    return uncertain_points
+  
+  
+def save_data_to_csv(path, n, z, k, bag_s, ep_c, prob_c, ex_bag_c, opt_bag_c, ep_r, prob_r, ex_bag_r, opt_bag_r):
+    dict = {'n': n, 'z': z, 'k': k, 'bag_size': bag_s, '': [''] * len(n), 'ep_c': ep_c,
+            'prob_c': prob_c, 'ex_bag_c': ex_bag_c, 'opt_bag_c': opt_bag_c, ' ': [''] * len(n),
+            'ep_r': ep_r, 'prob_r': prob_r, 'ex_bag_r': ex_bag_r, 'opt_bag_r': opt_bag_r}
+
+    df = pd.DataFrame(dict)
+    df.to_csv(path, index=False)

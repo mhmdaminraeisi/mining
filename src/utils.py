@@ -67,8 +67,8 @@ def get_index_of_nearest_center_to_coordinate(coordinate: Coordinate, centers: L
     return int(np.argmin(list(map(lambda c: euclidean_distance(coordinate, c), centers))))
 
 
-def get_distance_to_nearest_center(coordinate: Coordinate, centers: List[Center]) -> Center:
-    return [euclidean_distance(coordinate, c) for c in centers]
+def get_distance_to_nearest_center(coordinate: Coordinate, centers: List[Center]) -> float:
+    return min([euclidean_distance(coordinate, c) for c in centers])
     
 
 def get_expected_distance_of_uncertain_point_to_center(up: UncertainPoint, center: Center) -> float:
@@ -79,14 +79,17 @@ def get_expected_distance_assignment_for_one_uncertain_point(u_point:UncertainPo
     return int(np.argmin(list(map(lambda c: get_expected_distance_of_uncertain_point_to_center(u_point, c), centers))))
 
 
+def get_centers_of_districts(mins: List[float], maxs: List[float], num_of_intervals: List[int]) -> List[Center]:
+    interval_lengths = np.divide(np.array(maxs) - np.array(mins), num_of_intervals)
+    permutations = get_all_permutations(len(interval_lengths), num_of_intervals)
+    return list(map(lambda per: [mins[i] + (p+0.5)*interval_lengths[i]
+                                        for (i, p) in enumerate(per)], permutations))
+
+
 def get_one_center_of_uncertain_point(up: UncertainPoint, num_of_intervals=10) -> Center:
     mins = np.min(list(map(lambda p: p.coordinate, up)), axis=0)
     maxs = np.max(list(map(lambda p: p.coordinate, up)), axis=0)
-    interval_lengths = np.array((maxs - mins) / num_of_intervals)
-    permutations = get_all_permutations(len(interval_lengths), num_of_intervals)
-    one_centers = list(map(lambda per: [mins[i] + (p+0.5)*interval_lengths[i]
-                                        for (i, p) in enumerate(per)], permutations))
-
+    one_centers = get_centers_of_districts(mins, maxs, [num_of_intervals] * len(mins))
     return one_centers[get_expected_distance_assignment_for_one_uncertain_point(up, one_centers)]
 
 
@@ -97,7 +100,7 @@ def get_all_complete_assignments(temp_assignment: Assignments, k:int) -> List[As
         return list(np_assignments)
 
     hole_indices = list(filter(lambda i: temp_assignment[i] == -1, range(len(temp_assignment))))
-    permutations = get_all_permutations(len(hole_indices), k)
+    permutations = get_all_permutations(len(hole_indices), [k] * len(hole_indices))
     return list(map(lambda per:get_assignments_for_one_permutation(per, hole_indices), permutations))    
 
 
@@ -106,24 +109,17 @@ def get_best_assignments_in_list(u_points: List[UncertainPoint], centers: List[C
     return assignments_list[np.argmin(list(map(lambda a: ecost_of_an_assignment(u_points, centers, a), assignments_list)))]
 
 
-def get_all_permutations(n: int, k: int) -> List[List[int]]:
-    def convert_base(number: int, base: int) -> List[int]:
-        if base < 2:
-            return False
-        remainders = []
-        while number > 0:
-            remainders.append(number % base)
-            number //= base
-        remainders.reverse()
-        return remainders
-   
-    assignments = []
-    for i in range (k**n):
-        a = convert_base(i, k)
+def get_all_permutations(n: int, k_lengths: List[int]) -> List[List[int]]:
+    number_of_permutations = reduce(lambda acc, curr: acc * curr, k_lengths)
+    curr_per = np.array([0] * n)
+    permutations = [list(curr_per)]
     
-        while len(a) < n:
-            a.insert(0, 0)
+    while len(permutations) < number_of_permutations:
+        curr_index = 0
+        while curr_per[curr_index] == k_lengths[curr_index] - 1:
+            curr_per[curr_index] = 0
+            curr_index += 1
+        curr_per[curr_index] += 1
+        permutations.append(list(curr_per))
 
-        assignments.append(a)
-
-    return assignments
+    return permutations
