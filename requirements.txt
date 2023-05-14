@@ -2,3 +2,4 @@ numpy
 mypy
 pandas
 Jinja2
+pyspark

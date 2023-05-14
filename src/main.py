@@ -28,7 +28,7 @@ nn, kk, zz, bb = [], [], [], []
 
 for z_sqrt in [2, 3]:
     print('reading data z = {} ...'.format(z_sqrt * z_sqrt))
-    u_points = transfer_csv_to_desired_format('data/pokemon-spawns.csv', 's2_token', [z_sqrt, z_sqrt])
+    u_points = transfer_csv_to_desired_format('data/salt_lake_crime_cleaned.csv', 's2_token', [z_sqrt, z_sqrt])
     for n in [10, 50, len(u_points)]:
         sample = random.sample(u_points, n)
         for k in [3, 4]:
@@ -58,6 +58,8 @@ for z_sqrt in [2, 3]:
                 opt_bag_c.append(round(cost, 4))
                 opt_bag_r.append(round(run_time, 4))
                 
+                save_data_to_csv('results/salt_lake_crime_cleaned.csv', nn, zz, kk, bb, ep_c, prob_c, ex_bag_c, opt_bag_c, ep_r, prob_r, ex_bag_r, opt_bag_r)
+
                 
-save_data_to_csv('results/pokemon_result.csv', nn, zz, kk, bb, ep_c, prob_c, ex_bag_c, opt_bag_c, ep_r, prob_r, ex_bag_r, opt_bag_r)
+                
 
