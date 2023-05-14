@@ -2,6 +2,7 @@ from typing import *
 from entities import *
 from utils import *
 import numpy as np
+import time
 from functools import reduce
 
 def get_optimal_assignments(u_points: List[UncertainPoint], centers: List[Center]) -> Assignments:
@@ -17,9 +18,9 @@ def get_expected_point_assignments(u_points: List[UncertainPoint], centers: List
     def get_expected_point_assignment_for_one_uncertain_point(up: UncertainPoint) -> int:
         expected_coordinate = get_expected_coordinate_of_uncertain_point(up)
         return int(np.argmin(list(map(lambda c: euclidean_distance(expected_coordinate, c), centers))))
-      
+
     return list(map(lambda up: get_expected_point_assignment_for_one_uncertain_point(up), u_points))  
-      
+
 
 def get_one_center_assignments(u_points: List[UncertainPoint], centers:List[Center]) -> Assignments:
     def get_one_center_assignment_for_one_uncertain_point(up:UncertainPoint) -> int:
@@ -41,32 +42,44 @@ def get_probable_center_assignment(u_points: List[UncertainPoint], centers: List
         expected_center = np.dot(center_probs, centers)
         dist_from_centers = [euclidean_distance(expected_center, c) for c in centers]  
         return int(np.argmin(dist_from_centers))
-    
+
     return list(map(lambda up: get_probable_center_assignment_for_one_point(up), u_points))
 
 
 def get_optimal_assignments_for_bag_indices(u_points: List[UncertainPoint], centers: List[Center],
-                                            prev_assignments: Assignments, bag_indices: List[int]) -> Assignments:
+                                            prev_assignments: Assignments, bag_indices: List[int],
+                                            start_time) -> Assignments:
         temp_assignments = np.array(prev_assignments)
         temp_assignments[bag_indices] = -1
         all_complete_assignments = get_all_complete_assignments(list(temp_assignments), len(centers))
+        if is_time_limited(start_time):
+            return all_complete_assignments[0]
         return get_best_assignments_in_list(u_points, centers, all_complete_assignments)
 
 
 def get_bagging_assignments(u_points: List[UncertainPoint], centers: List[Center], bag_size: int) -> Assignments:
+    start_time = time.time()
     n = len(u_points)
     ep_assignments = get_expected_point_assignments(u_points, centers)
     bags_indices = [list(range(x, min(x + bag_size, n))) for x in range(0, n, bag_size)]
     opt_assignments = list(map(lambda bi: list(np.array(get_optimal_assignments_for_bag_indices(
-        u_points, centers, ep_assignments, bi))[bi]), bags_indices))
-    
+        u_points, centers, ep_assignments, bi, start_time))[bi]), bags_indices))
+    if is_time_limited(start_time):
+        return None
     return reduce(lambda acc, curr: acc + curr, opt_assignments)
     
 
 def get_bagging_assignments_with_fixed_prev_opts(u_points: List[UncertainPoint],
                                                  centers: List[Center], bag_size: int) -> Assignments:
+    start_time = time.time()
     n = len(u_points)
     ep_assignments = get_expected_point_assignments(u_points, centers)
     bags_indices = [list(range(x, min(x + bag_size, n))) for x in range(0, n, bag_size)]
-    return reduce(lambda acc, curr: get_optimal_assignments_for_bag_indices(u_points, centers, acc, curr),
+    res = reduce(lambda acc, curr: get_optimal_assignments_for_bag_indices(u_points, centers, acc, curr, start_time),
                   bags_indices, ep_assignments)
+    if is_time_limited(start_time):
+        return None
+    return res
+
+def is_time_limited(start_time):
+    return time.time() - start_time > 3600 * 2

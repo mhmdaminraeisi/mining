@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import math
 from typing import *
 from entities import *
 from functools import reduce
@@ -26,13 +27,13 @@ def ecost_of_an_assignment(u_points: List[UncertainPoint], centers: List[Center]
     for obj in objects:
         i, prob, dist = obj.get('i'), obj.get('prob'), obj.get('distance_to_center')
 
-        if prob == 0:
+        if is_equal_to_zero(prob):
             continue
-        
-        if sum_probs[i] == 0:
+
+        if is_equal_to_zero(sum_probs[i]):
             number_of_zero_sum_probs -= 1
 
-        if sum_probs[i] != 0:
+        if not is_equal_to_zero(sum_probs[i]):
             mult /= sum_probs[i]
 
         sum_probs[i] += prob
@@ -46,15 +47,17 @@ def ecost_of_an_assignment(u_points: List[UncertainPoint], centers: List[Center]
     return ecost
 
 
-def generate_k_center_with_kmeans(coordinates: List[Coordinate], k: int) -> List[Center]:
-    start_index = random.randint(0, len(coordinates) - 1)
+def generate_k_center_with_k_center(coordinates: List[Coordinate], k: int) -> List[Center]:
+    # start_index = random.randint(0, len(coordinates) - 1)
+    start_index = 0
+
     centers = [coordinates[start_index]]
 
     while len(centers) < k:
         dists = list(map(lambda coord: get_distance_to_nearest_center(coord, centers), coordinates))
         index = int(np.argmax(dists))   
         centers.append(coordinates[index])
-        
+
     return centers
 
 
@@ -113,7 +116,7 @@ def get_all_permutations(n: int, k_lengths: List[int]) -> List[List[int]]:
     number_of_permutations = reduce(lambda acc, curr: acc * curr, k_lengths)
     curr_per = np.array([0] * n)
     permutations = [list(curr_per)]
-    
+
     while len(permutations) < number_of_permutations:
         curr_index = 0
         while curr_per[curr_index] == k_lengths[curr_index] - 1:
@@ -123,3 +126,10 @@ def get_all_permutations(n: int, k_lengths: List[int]) -> List[List[int]]:
         permutations.append(list(curr_per))
 
     return permutations
+
+def is_equal_to_zero(number: int):
+    return abs(number) < 1e-6
+
+def check_params_is_valid_for_bagging_assignments(n: int, z: int, k: int, b: int):
+    o = (n / b) * math.pow(k, b) * n * z * math.log(n * z, 2)
+    return o < 5e11
