@@ -17,9 +17,9 @@ def get_expected_point_assignments(u_points: List[UncertainPoint], centers: List
     def get_expected_point_assignment_for_one_uncertain_point(up: UncertainPoint) -> int:
         expected_coordinate = get_expected_coordinate_of_uncertain_point(up)
         return int(np.argmin(list(map(lambda c: euclidean_distance(expected_coordinate, c), centers))))
-      
+
     return list(map(lambda up: get_expected_point_assignment_for_one_uncertain_point(up), u_points))  
-      
+
 
 def get_one_center_assignments(u_points: List[UncertainPoint], centers:List[Center]) -> Assignments:
     def get_one_center_assignment_for_one_uncertain_point(up:UncertainPoint) -> int:
@@ -41,7 +41,7 @@ def get_probable_center_assignment(u_points: List[UncertainPoint], centers: List
         expected_center = np.dot(center_probs, centers)
         dist_from_centers = [euclidean_distance(expected_center, c) for c in centers]  
         return int(np.argmin(dist_from_centers))
-    
+
     return list(map(lambda up: get_probable_center_assignment_for_one_point(up), u_points))
 
 
@@ -59,7 +59,7 @@ def get_bagging_assignments(u_points: List[UncertainPoint], centers: List[Center
     bags_indices = [list(range(x, min(x + bag_size, n))) for x in range(0, n, bag_size)]
     opt_assignments = list(map(lambda bi: list(np.array(get_optimal_assignments_for_bag_indices(
         u_points, centers, ep_assignments, bi))[bi]), bags_indices))
-    
+
     return reduce(lambda acc, curr: acc + curr, opt_assignments)
     
 
