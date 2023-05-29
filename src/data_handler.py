@@ -47,10 +47,10 @@ def transfer_csv_to_desired_format(path: str, key: str, num_of_intervals: List[i
     return uncertain_points
   
   
-def save_data_to_csv(path, n, z, k, bag_s, ep_c, prob_c, ex_bag_c, opt_bag_c, ep_r, prob_r, ex_bag_r, opt_bag_r):
-    dict = {'n': n, 'z': z, 'k': k, 'bag_size': bag_s, '': [''] * len(n), 'ep_c': ep_c,
-            'prob_c': prob_c, 'ex_bag_c': ex_bag_c, 'opt_bag_c': opt_bag_c, ' ': [''] * len(n),
-            'ep_r': ep_r, 'prob_r': prob_r, 'ex_bag_r': ex_bag_r, 'opt_bag_r': opt_bag_r}
+def save_data_to_csv(path, dict):
+    # dict = {'n': n, 'z': z, 'k': k, 'bag_size': bag_s, '': [''] * len(n), 'ep_c': ep_c,
+    #         'prob_c': prob_c, 'ex_bag_c': ex_bag_c, 'opt_bag_c': opt_bag_c, ' ': [''] * len(n),
+    #         'ep_r': ep_r, 'prob_r': prob_r, 'ex_bag_r': ex_bag_r, 'opt_bag_r': opt_bag_r}
 
     df = pd.DataFrame(dict)
     df.to_csv(path, index=False)
