@@ -25,7 +25,6 @@ def run_assignments(method, u_points: List[UncertainPoint], centers: List[Center
     run_time = time.time() - start_time
     return cost, run_time
 
-
 u_points = {}
 res = {}
 for data_name in sys.argv[1:]:
@@ -51,6 +50,8 @@ for data_name in sys.argv[1:]:
 
 for data_name in sys.argv[1:]:
     paras = parameters.get(data_name)
+
+    paras.sort(key=lambda x: (x[0] / x[3]) * pow(x[2], x[3]) * x[0] * x[1] * x[1] * math.log(x[0] * x[1] * x[1]))
 
     for (i, p) in enumerate(paras):
         n, z_sqrt, k, bag_size = p[0], p[1], p[2], p[3]
@@ -79,6 +80,8 @@ for data_name in sys.argv[1:]:
 
 for data_name in sys.argv[1:]:
     paras = parameters.get(data_name)
+
+    paras.sort(key=lambda x: (x[0] / x[3]) * pow(x[2], x[3]) * x[0] * x[1] * x[1] * math.log(x[0] * x[1] * x[1]))
 
     for (i, p) in enumerate(paras):
         n, z_sqrt, k, bag_size = p[0], p[1], p[2], p[3]
