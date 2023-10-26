@@ -7,21 +7,29 @@ from data_handler import *
 from assignment import *
 from config import *
 import sys
+from pyspark.sql import SparkSession
 
-def run_assignments_with_bags(method, u_points: List[UncertainPoint], centers: List[Center], bag_size: int) -> Tuple:
+ss = SparkSession.builder.appName("mining").getOrCreate()
+ss.sparkContext.addPyFile("src/utils.py")
+ss.sparkContext.addPyFile("src/entities.py")
+ss.sparkContext.addPyFile("src/main.py")
+ss.sparkContext.addPyFile("src/assignment.py")
+
+
+def run_assignments_with_bags(method, u_points: RDD, centers: List[Center], bag_size: int) -> Tuple:
     start_time = time.time()
-    assignments = method(u_points, centers, bag_size)
+    assignments = method(u_points, centers, bag_size, ss)
     if assignments == None:
         return -1, -1
-    cost = ecost_of_an_assignment(u_points, centers, assignments)
+    cost = ecost_of_an_assignment(u_points.collect(), centers, assignments)
     run_time = time.time() - start_time
     return cost, run_time
     
 
-def run_assignments(method, u_points: List[UncertainPoint], centers: List[Center]) -> Tuple:
+def run_assignments(method, u_points: RDD, centers: List[Center]) -> Tuple:
     start_time = time.time()
     assignments = method(u_points, centers)
-    cost = ecost_of_an_assignment(u_points, centers, assignments)
+    cost = ecost_of_an_assignment(u_points.collect(), centers, assignments)
     run_time = time.time() - start_time
     return cost, run_time
 
@@ -56,8 +64,11 @@ for data_name in sys.argv[1:]:
         n, z_sqrt, k, bag_size = p[0], p[1], p[2], p[3]
         z = z_sqrt * z_sqrt
         sample = u_points[data_name][z_sqrt][0:n]
-        expected_coordinates = list(map(lambda up: get_expected_coordinate_of_uncertain_point(up), sample))
-        centers = generate_k_center_with_k_center(expected_coordinates, k) 
+        sample = ss.sparkContext.parallelize(sample, numSlices=200)
+
+        expected_coordinates = sample.map(get_expected_coordinate_of_uncertain_point).collect()
+        
+        centers = generate_k_center_with_k_center(expected_coordinates, k)
 
         print('for data {}, n = {}, k = {}, z = {}, bag_size = {} ...'.format(data_name, n, k, z, bag_size))
         res[data_name]['n'][i] = n
@@ -84,7 +95,10 @@ for data_name in sys.argv[1:]:
         n, z_sqrt, k, bag_size = p[0], p[1], p[2], p[3]
         z = z_sqrt * z_sqrt
         sample = u_points[data_name][z_sqrt][0:n]
-        expected_coordinates = list(map(lambda up: get_expected_coordinate_of_uncertain_point(up), sample))
+        sample = ss.sparkContext.parallelize(sample, numSlices=200)
+
+        expected_coordinates = sample.map(get_expected_coordinate_of_uncertain_point).collect()
+        
         centers = generate_k_center_with_k_center(expected_coordinates, k) 
 
         print('for data {}, n = {}, k = {}, z = {}, bag_size = {} ...'.format(data_name, n, k, z, bag_size))

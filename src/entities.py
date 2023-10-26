@@ -1,4 +1,5 @@
 from typing import NewType, List
+import pyspark
 
 Coordinate = NewType('Coordinate', List[float])
 
@@ -14,3 +15,5 @@ UncertainPoint = NewType('UncertainPoint', List[Point])
 Center = NewType('Center', Coordinate)
 
 Assignments = NewType('Assignments', List[int])
+
+RDD = pyspark.RDD
