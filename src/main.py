@@ -9,7 +9,7 @@ from config import *
 import sys
 from pyspark.sql import SparkSession
 
-ss = SparkSession.builder.appName("mining").getOrCreate()
+ss = SparkSession.builder.config("spark.driver.memory", "64g").appName("mining").getOrCreate()
 ss.sparkContext.addPyFile("src/utils.py")
 ss.sparkContext.addPyFile("src/entities.py")
 ss.sparkContext.addPyFile("src/main.py")
