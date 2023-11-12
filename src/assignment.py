@@ -89,4 +89,4 @@ def get_bagging_assignments_with_fixed_prev_opts(u_points: RDD, centers: List[Ce
     return res
 
 def is_time_limited(start_time):
-    return time.time() - start_time > 3600 * 2
+    return time.time() - start_time > 3600 * 4

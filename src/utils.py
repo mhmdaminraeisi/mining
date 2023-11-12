@@ -110,7 +110,7 @@ def get_all_complete_assignments(temp_assignment: Assignments, k:int) -> List[As
 def get_best_assignments_in_list(u_points: List[UncertainPoint], centers: List[Center],
                                  assignments_list: List[Assignments], spark) -> Assignments:
 
-    assignments_list_par = spark.sparkContext.parallelize(assignments_list, numSlices=200)
+    assignments_list_par = spark.sparkContext.parallelize(assignments_list, numSlices=250)
     index = np.argmin(assignments_list_par.map(lambda a: ecost_of_an_assignment(u_points, centers, a)).collect())
     return assignments_list[index]
 

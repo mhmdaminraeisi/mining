@@ -9,7 +9,7 @@ from config import *
 import sys
 from pyspark.sql import SparkSession
 
-ss = SparkSession.builder.config("spark.driver.memory", "64g").appName("mining").getOrCreate()
+ss = SparkSession.builder.config("spark.driver.memory", "120g").appName("mining").getOrCreate()
 ss.sparkContext.addPyFile("src/utils.py")
 ss.sparkContext.addPyFile("src/entities.py")
 ss.sparkContext.addPyFile("src/main.py")
@@ -64,7 +64,7 @@ for data_name in sys.argv[1:]:
         n, z_sqrt, k, bag_size = p[0], p[1], p[2], p[3]
         z = z_sqrt * z_sqrt
         sample = u_points[data_name][z_sqrt][0:n]
-        sample = ss.sparkContext.parallelize(sample, numSlices=200)
+        sample = ss.sparkContext.parallelize(sample, numSlices=250)
 
         expected_coordinates = sample.map(get_expected_coordinate_of_uncertain_point).collect()
         
@@ -95,7 +95,7 @@ for data_name in sys.argv[1:]:
         n, z_sqrt, k, bag_size = p[0], p[1], p[2], p[3]
         z = z_sqrt * z_sqrt
         sample = u_points[data_name][z_sqrt][0:n]
-        sample = ss.sparkContext.parallelize(sample, numSlices=200)
+        sample = ss.sparkContext.parallelize(sample, numSlices=250)
 
         expected_coordinates = sample.map(get_expected_coordinate_of_uncertain_point).collect()
         
