@@ -106,11 +106,11 @@ for data_name in sys.argv[1:]:
         res[data_name]['k'][i] = k
         res[data_name]['z'][i] = z
         res[data_name]['b'][i] = bag_size
-        print('running bagging_assignments ...')
-        cost, run_time = run_assignments_with_bags(get_bagging_assignments, sample, centers, bag_size)
-        res[data_name]['ex_bag_c'][i] = round(cost, 4)
-        res[data_name]['ex_bag_r'][i] = round(run_time, 4)
-        print(cost, run_time)
+        # print('running bagging_assignments ...')
+        # cost, run_time = run_assignments_with_bags(get_bagging_assignments, sample, centers, bag_size)
+        # res[data_name]['ex_bag_c'][i] = round(cost, 4)
+        # res[data_name]['ex_bag_r'][i] = round(run_time, 4)
+        # print(cost, run_time)
         print('running bagging_assignments_with_opts ...')
         cost, run_time = run_assignments_with_bags(get_bagging_assignments_with_fixed_prev_opts, sample, centers, bag_size)
         res[data_name]['opt_bag_c'][i] = round(cost, 4)
